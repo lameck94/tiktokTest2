@@ -33,18 +33,9 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
   @override
   void initState() {
     super.initState();
-    // Add a listener to stop the timer if the user manually scrolls, 
-    // but only if the user hasn't toggled the auto-scroll off.
-    _pageController.addListener(_handleUserScroll);
   }
 
-  // Handle manual user scrolling to potentially reset or stop the timer
-  void _handleUserScroll() {
-    if (_isAutoScrolling && _pageController.page != null && !_pageController.page!.isFinite) {
-      // User is dragging or initiating scroll manually. Stop the timer temporarily.
-      _stopAutoScroll(userInitiated: true);
-    }
-  }
+  
 
   // Toggles the auto-scroll timer on and off
   void _toggleAutoScroll() {
@@ -84,7 +75,6 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
 
   @override
   void dispose() {
-    _pageController.removeListener(_handleUserScroll);
     _pageController.dispose();
     _timer?.cancel();
     super.dispose();
@@ -167,13 +157,23 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
       body: Stack(
         children: [
           // The main simulated feed using PageView
-          PageView.builder(
-            scrollDirection: Axis.vertical,
-            controller: _pageController,
-            itemCount: 100, // Large number for infinite-like scrolling
-            itemBuilder: (context, index) {
-              return _buildVideoCard(index);
+          NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (_isAutoScrolling) {
+                if (notification is ScrollStartNotification && notification.dragDetails != null) {
+                  _stopAutoScroll(userInitiated: true);
+                }
+              }
+              return false;
             },
+            child: PageView.builder(
+              scrollDirection: Axis.vertical,
+              controller: _pageController,
+              itemCount: 100,
+              itemBuilder: (context, index) {
+                return _buildVideoCard(index);
+              },
+            ),
           ),
           
           // Floating Action Button to toggle auto-scroll
@@ -223,7 +223,7 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
   }
 }
 
-// Entry point of the Flutter application
+// Entry point of the application
 void main() {
   runApp(const MyApp());
 }
