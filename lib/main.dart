@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
 
-// Main application component
 class AutoScrollFeed extends StatefulWidget {
   const AutoScrollFeed({super.key});
 
@@ -11,15 +10,13 @@ class AutoScrollFeed extends StatefulWidget {
 }
 
 class _AutoScrollFeedState extends State<AutoScrollFeed> {
-  // Controller to manage the vertical scrolling of the PageView
   final PageController _pageController = PageController();
-  
-  // State variables for the auto-scroll functionality
+
   Timer? _timer;
   bool _isAutoScrolling = false;
-  final Duration _scrollInterval = const Duration(seconds: 4); // Scroll every 4 seconds
 
-  // Simulated content data
+  final Duration _scrollInterval = const Duration(seconds: 4);
+
   final List<String> _simulatedVideos = [
     "Exploring the Dolomites 🏔️",
     "Cooking: The Ultimate Pasta Dish 🍝",
@@ -31,88 +28,75 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  
-
-  // Toggles the auto-scroll timer on and off
-  void _toggleAutoScroll() {
-    setState(() {
-      if (_isAutoScrolling) {
-        _stopAutoScroll();
-      } else {
-        _startAutoScroll();
-      }
-    });
-  }
-
-  // Starts the timer for automatic scrolling
-  void _startAutoScroll() {
-    _isAutoScrolling = true;
-    _timer = Timer.periodic(_scrollInterval, (timer) {
-      if (_pageController.hasClients) {
-        // Scroll to the next page smoothly
-        _pageController.nextPage(
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
-  }
-
-  // Stops the timer
-  void _stopAutoScroll({bool userInitiated = false}) {
-    _timer?.cancel();
-    _isAutoScrolling = false;
-    // If the user manually scrolled, they might want to re-enable it easily.
-    if (userInitiated) {
-        // Optional: Show a message that auto-scroll stopped after manual interaction
-    }
-  }
-
-  @override
   void dispose() {
     _pageController.dispose();
     _timer?.cancel();
     super.dispose();
   }
 
-  // --- UI Components ---
+  // Toggle auto-scroll
+  void _toggleAutoScroll() {
+    if (_isAutoScrolling) {
+      _stopAutoScroll();
+    } else {
+      _startAutoScroll();
+    }
 
-  // Build the individual video card widget
+    setState(() {});
+  }
+
+  void _startAutoScroll() {
+    _isAutoScrolling = true;
+    _timer = Timer.periodic(_scrollInterval, (timer) {
+      if (_pageController.hasClients) {
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  void _stopAutoScroll({bool userInitiated = false}) {
+    _timer?.cancel();
+    _isAutoScrolling = false;
+
+    if (userInitiated) {
+      // Optional: show snackbar when user scrolls manually
+    }
+  }
+
   Widget _buildVideoCard(int index) {
-    // Generate a random color for the background to simulate different video content
-    final randomColor = Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(0.8);
+    final randomColor =
+        Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(0.8);
+
     final title = _simulatedVideos[index % _simulatedVideos.length];
 
     return Container(
-      color: Colors.black, // Dark background for the 'feed' look
-      alignment: Alignment.center,
+      color: Colors.black,
       child: Stack(
         alignment: Alignment.bottomLeft,
         children: [
-          // Simulated Video Content Area
+          /// Fake Video Container
           Center(
             child: Container(
               height: 200,
               width: 300,
               decoration: BoxDecoration(
                 color: randomColor,
-                borderRadius: BorderRadius.circular(16.0),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: Center(
+              child: const Center(
                 child: Text(
-                  'Video ${index + 1}',
-                  style: const TextStyle(
+                  'Video',
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -121,21 +105,29 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
               ),
             ),
           ),
-          // Simulated User Info/Caption Overlay
+
+          /// Caption + Username
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '@user_funky_${index + 1}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   title,
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -147,54 +139,54 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
     );
   }
 
-  // Build the main UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // The main simulated feed using PageView
           NotificationListener<ScrollNotification>(
             onNotification: (notification) {
-              if (_isAutoScrolling) {
-                if (notification is ScrollStartNotification && notification.dragDetails != null) {
-                  _stopAutoScroll(userInitiated: true);
-                }
+              // User touched screen → stop auto scroll
+              if (_isAutoScrolling &&
+                  notification is ScrollStartNotification &&
+                  notification.dragDetails != null) {
+                _stopAutoScroll(userInitiated: true);
+                setState(() {});
               }
               return false;
             },
             child: PageView.builder(
-              scrollDirection: Axis.vertical,
               controller: _pageController,
+              scrollDirection: Axis.vertical,
               itemCount: 100,
-              itemBuilder: (context, index) {
-                return _buildVideoCard(index);
-              },
+              itemBuilder: (_, index) => _buildVideoCard(index),
             ),
           ),
-          
-          // Floating Action Button to toggle auto-scroll
+
+          /// Floating Auto Scroll Button
           Positioned(
             bottom: 40,
             right: 20,
             child: FloatingActionButton.extended(
               onPressed: _toggleAutoScroll,
               icon: Icon(
-                _isAutoScrolling ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                _isAutoScrolling
+                    ? Icons.pause_circle_filled
+                    : Icons.play_circle_fill,
                 size: 28,
               ),
               label: Text(
                 _isAutoScrolling ? 'Auto-Scrolling ON' : 'Start Auto-Scroll',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              backgroundColor: _isAutoScrolling ? Colors.redAccent : Colors.teal,
+              backgroundColor:
+                  _isAutoScrolling ? Colors.redAccent : Colors.teal,
               foregroundColor: Colors.white,
-              elevation: 8,
             ),
           ),
 
-          // Top Info Bar (Simulated)
+          /// Transparent AppBar
           Positioned(
             top: 40,
             left: 0,
@@ -202,11 +194,14 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
             child: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
+              centerTitle: true,
               title: const Text(
                 'Simulated Video Feed',
-                style: TextStyle(fontWeight: FontWeight.w300, color: Colors.white70),
+                style: TextStyle(
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white70,
+                ),
               ),
-              centerTitle: true,
               actions: [
                 IconButton(
                   icon: const Icon(Icons.search, color: Colors.white70),
@@ -221,7 +216,6 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
   }
 }
 
-// Entry point of the application
 void main() {
   runApp(const MyApp());
 }
@@ -233,13 +227,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Hands-Free Scroll Demo',
-      // Set the overall theme to dark mode
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: Colors.black,
-        colorScheme: ColorScheme.fromSwatch(
-          primarySwatch: Colors.pink,
-          brightness: Brightness.dark,
-        ),
       ),
       debugShowCheckedModeBanner: false,
       home: const AutoScrollFeed(),
