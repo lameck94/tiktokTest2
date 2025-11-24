@@ -55,7 +55,7 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
       if (_pageController.hasClients) {
         // Scroll to the next page smoothly
         _pageController.nextPage(
-          duration: const Duration(milliseconds: 1000),
+          duration: const Duration(milliseconds: 800),
           curve: Curves.easeInOut,
         );
       }
@@ -66,7 +66,6 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
   void _stopAutoScroll({bool userInitiated = false}) {
     _timer?.cancel();
     _isAutoScrolling = false;
-    
     // If the user manually scrolled, they might want to re-enable it easily.
     if (userInitiated) {
         // Optional: Show a message that auto-scroll stopped after manual interaction
@@ -122,7 +121,6 @@ class _AutoScrollFeedState extends State<AutoScrollFeed> {
               ),
             ),
           ),
-          
           // Simulated User Info/Caption Overlay
           Padding(
             padding: const EdgeInsets.all(24.0),
